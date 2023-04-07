@@ -7,7 +7,6 @@ exports.onRealtimeUpdate = functions.firestore.document('Looft/{deviceID}/realti
   const newValue = change.after.data();
 
   let deviceName = (await admin.firestore().doc('Data/Devices').get()).data()[context.params.deviceID]['name'];
-  deviceName += '\n\n';
 
   let email = 'Dear Admin,\n\n';
   let shouldSendEmail = false;
@@ -19,8 +18,7 @@ exports.onRealtimeUpdate = functions.firestore.document('Looft/{deviceID}/realti
         const threshold = Number(doc.data()['threshold']);
 
         if (compare(comparison, newValue[metric], threshold) === true) {
-          email += `The value for ${firebaseVariableToString(metric)} has exceeded(${comparison}) the threshold of ${threshold}.\n' +
-            'The current reading is ${newValue[metric]}.\n\n`;
+          email += `The value for ${firebaseVariableToString(metric)} is ${comparisonFromString(comparison)} the threshold of ${threshold}.\nThe current reading is ${newValue[metric]}.\n\n`;
           shouldSendEmail = true;
         }
       });
@@ -35,7 +33,7 @@ exports.onRealtimeUpdate = functions.firestore.document('Looft/{deviceID}/realti
     await sendEmail(
       'iot-dashboard <noreply@firebase.com>',
       'awais@looft.io',
-      `Alert | ${deviceName} | Threshold Exceeded`,
+      `Alert | ${deviceName} | Threshold Reached`,
        email,
     );
   }
