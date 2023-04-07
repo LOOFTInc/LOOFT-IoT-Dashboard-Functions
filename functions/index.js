@@ -8,35 +8,32 @@ exports.onRealtimeUpdate = functions.firestore.document('Looft/{deviceID}/realti
 
   let deviceName = (await admin.firestore().doc('Data/Devices').get()).data()[context.params.deviceID]['name'];
 
-  let email = 'Dear Admin,\n\n';
-  let shouldSendEmail = false;
   await admin.firestore().collection(`Looft/${context.params.deviceID}/listeners`).get().then(
     (value) => {
-      value.docs.forEach((doc) => {
+      value.docs.forEach(async (doc) => {
         const comparison = doc.data()['comparison'];
         const metric = doc.data()['metric'];
         const threshold = Number(doc.data()['threshold']);
+        const emailAddress = doc.data()['email'];
 
+        let email = 'Dear Admin,\n\n';
         if (compare(comparison, newValue[metric], threshold) === true) {
           email += `The value for ${firebaseVariableToString(metric)} is ${comparisonFromString(comparison)} the threshold of ${threshold}.\nThe current reading is ${newValue[metric]}.\n\n`;
-          shouldSendEmail = true;
+
+          email += 'Please take appropriate action.\n\n' +
+            'Thank you.\n' +
+            'LOOFT IoT';
+
+          await sendEmail(
+            'iot-dashboard <noreply@firebase.com>',
+            emailAddress,
+            `Alert | ${deviceName} | ${firebaseVariableToString(metric)} Threshold Reached`,
+            email,
+          );
         }
       });
     }
   );
-
-  if (shouldSendEmail === true) {
-    email += '\n\nPlease take appropriate action.\n\n' +
-      'Thank you.\n' +
-      'LOOFT IoT'
-
-    await sendEmail(
-      'iot-dashboard <noreply@firebase.com>',
-      'awais@looft.io',
-      `Alert | ${deviceName} | Threshold Reached`,
-       email,
-    );
-  }
 });
 
 const compare = (string, value, threshold) => {
