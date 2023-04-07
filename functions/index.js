@@ -9,7 +9,8 @@ exports.onRealtimeUpdate = functions.firestore.document('Looft/{deviceID}/realti
   let deviceName = (await admin.firestore().doc('Data/Devices').get()).data()[context.params.deviceID]['name'];
   deviceName += '\n\n';
 
-  let email = '';
+  let email = 'Dear Admin,\n\n';
+  let shouldSendEmail = false;
   await admin.firestore().collection(`Looft/${context.params.deviceID}/listeners`).get().then(
     (value) => {
       value.docs.forEach((doc) => {
@@ -18,14 +19,25 @@ exports.onRealtimeUpdate = functions.firestore.document('Looft/{deviceID}/realti
         const threshold = Number(doc.data()['threshold']);
 
         if (compare(comparison, newValue[metric], threshold) === true) {
-          email += `${firebaseVariableToString(metric)} is ${comparisonFromString(comparison)} ${threshold}\n`;
+          email += `The value for ${firebaseVariableToString(metric)} has exceeded(${comparison}) the threshold of ${threshold}.\n' +
+            'The current reading is ${newValue[metric]}.\n\n`;
+          shouldSendEmail = true;
         }
       });
     }
   );
 
-  if (email !== '') {
-    await sendEmail('iot-dashboard@looft <noreply@firebase.com>', 'awais@looft.io', 'Dashboard Threshold', deviceName + email);
+  if (shouldSendEmail === true) {
+    email += '\n\nPlease take appropriate action.\n\n' +
+      'Thank you.\n' +
+      'LOOFT IoT'
+
+    await sendEmail(
+      'iot-dashboard <noreply@firebase.com>',
+      'awais@looft.io',
+      `Alert | ${deviceName} | Threshold Exceeded`,
+       email,
+    );
   }
 });
 
