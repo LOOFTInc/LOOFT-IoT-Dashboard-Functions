@@ -3,6 +3,7 @@ const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
 admin.initializeApp();
 
+// This function is triggered when the realtime data for a device is updated.
 exports.onRealtimeUpdate = functions.firestore.document('Looft/{deviceID}/realtime/data').onUpdate(async (change, context) => {
   const newValue = change.after.data();
 
@@ -36,6 +37,7 @@ exports.onRealtimeUpdate = functions.firestore.document('Looft/{deviceID}/realti
   );
 });
 
+// Compares the value to the threshold based on the comparison string.
 const compare = (string, value, threshold) => {
   if (string === '<') {
     return value < threshold;
@@ -60,6 +62,7 @@ const mailTransport = nodemailer.createTransport({
   },
 });
 
+// Sends an email to the specified email address.
 const sendEmail = async (from, to, subject, body) => {
   const mailOptions = {
     from: from,
@@ -75,6 +78,7 @@ const sendEmail = async (from, to, subject, body) => {
     });
 }
 
+// Converts the firebase variable to a human readable string.
 const firebaseVariableToString = (variable) => {
   switch (variable) {
     case 'Otemperature':
@@ -100,6 +104,7 @@ const firebaseVariableToString = (variable) => {
   }
 }
 
+// Converts the comparison string to a human readable string.
 const comparisonFromString = (value) => {
   switch (value) {
     case '>':
