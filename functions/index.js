@@ -7,11 +7,10 @@ admin.initializeApp();
 exports.onRealtimeUpdate = functions.firestore.document('Companies/{companyName}/IoT/realtime_data/devices/{deviceID}').onUpdate(async (change, context) => {
   const newValue = change.after.data();
 
-  let deviceName = (await admin.firestore().doc(`Companies/${context.params.companyName}/IoT/device_data/devices/${context.params.deviceID}`).get()).data()['deviceName'] || `${context.params.deviceID}`;
-
   await admin.firestore().collection(`Companies/${context.params.companyName}/IoT/device_data/devices/${context.params.deviceID}/listeners`).get().then(
     (value) => {
       value.docs.forEach(async (doc) => {
+        const deviceName = doc.data()['deviceName'];
         const comparison = doc.data()['comparison'];
         const variableName = doc.data()['variableName'];
         const threshold = Number(doc.data()['threshold']);
@@ -19,14 +18,14 @@ exports.onRealtimeUpdate = functions.firestore.document('Companies/{companyName}
 
         let email = 'Dear Admin,\n\n';
         if (compare(comparison, newValue[variableName], threshold) === true) {
-          email += `The value for ${variableName} is ${comparisonFromString(comparison)} the threshold of ${threshold}.\nThe current reading is ${newValue[variableName]}.\n\n`;
+          email += `The value of ${variableName} for ${deviceName}(${context.params.deviceID}) is ${comparisonFromString(comparison)} the threshold of ${threshold}.\nThe current reading is ${newValue[variableName]}.\n\n`;
 
           email += 'Please take appropriate action.\n\n' +
             'Thank you.\n' +
             'LOOFT';
 
           await sendEmail(
-            'iot-dashboard <noreply@firebase.com>',
+            'LOOFT Dashboard <noreply@firebase.com>',
             emailAddress,
             `Alert | ${deviceName} | ${variableName} Threshold Reached`,
             email,
