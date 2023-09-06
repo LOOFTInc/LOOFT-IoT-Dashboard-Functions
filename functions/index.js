@@ -4,31 +4,31 @@ const nodemailer = require('nodemailer');
 admin.initializeApp();
 
 // This function is triggered when the realtime data for a device is updated.
-exports.onRealtimeUpdate = functions.firestore.document('Looft/{deviceID}/realtime/data').onUpdate(async (change, context) => {
+exports.onRealtimeUpdate = functions.firestore.document('Companies/{companyName}/IoT/realtime_data/devices/{deviceID}').onUpdate(async (change, context) => {
   const newValue = change.after.data();
 
-  let deviceName = (await admin.firestore().doc('Data/Devices').get()).data()[context.params.deviceID]['name'];
+  let deviceName = (await admin.firestore().doc(`Companies/${context.params.companyName}/IoT/device_data/devices/${context.params.deviceID}`).get()).data()['deviceName'] || `${context.params.deviceID}`;
 
-  await admin.firestore().collection(`Looft/${context.params.deviceID}/listeners`).get().then(
+  await admin.firestore().collection(`Companies/${context.params.companyName}/IoT/device_data/devices/${context.params.deviceID}/listeners`).get().then(
     (value) => {
       value.docs.forEach(async (doc) => {
         const comparison = doc.data()['comparison'];
-        const metric = doc.data()['metric'];
+        const variableName = doc.data()['variableName'];
         const threshold = Number(doc.data()['threshold']);
         const emailAddress = doc.data()['email'];
 
         let email = 'Dear Admin,\n\n';
-        if (compare(comparison, newValue[metric], threshold) === true) {
-          email += `The value for ${firebaseVariableToString(metric)} is ${comparisonFromString(comparison)} the threshold of ${threshold}.\nThe current reading is ${newValue[metric]}.\n\n`;
+        if (compare(comparison, newValue[variableName], threshold) === true) {
+          email += `The value for ${variableName} is ${comparisonFromString(comparison)} the threshold of ${threshold}.\nThe current reading is ${newValue[variableName]}.\n\n`;
 
           email += 'Please take appropriate action.\n\n' +
             'Thank you.\n' +
-            'LOOFT IoT';
+            'LOOFT';
 
           await sendEmail(
             'iot-dashboard <noreply@firebase.com>',
             emailAddress,
-            `Alert | ${deviceName} | ${firebaseVariableToString(metric)} Threshold Reached`,
+            `Alert | ${deviceName} | ${variableName} Threshold Reached`,
             email,
           );
         }
@@ -76,32 +76,6 @@ const sendEmail = async (from, to, subject, body) => {
     .then((e) => {
       return {'result': e};
     });
-}
-
-// Converts the firebase variable to a human readable string.
-const firebaseVariableToString = (variable) => {
-  switch (variable) {
-    case 'Otemperature':
-      return 'Outside Temperature';
-    case 'Ihumidity':
-      return 'Inside Humidity';
-    case 'Ohumidity':
-      return 'Outside Humidity';
-    case 'Current':
-      return 'Current';
-    case 'RealPower':
-      return 'Real Power';
-    case 'coilInTemp':
-      return 'In Coil Temperature';
-    case 'coilOutTemp':
-      return 'Out Coil Temperature';
-    case 'FreeHEAP':
-      return 'Free RAM';
-    case 'maxHEAP':
-      return 'Max RAM Usage';
-    default:
-      return 'Inside Temperature';
-  }
 }
 
 // Converts the comparison string to a human readable string.
