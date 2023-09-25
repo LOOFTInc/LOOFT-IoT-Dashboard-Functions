@@ -3,6 +3,36 @@ const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
 admin.initializeApp();
 
+exports.getAutoCompleteSuggestions = functions
+  .runWith({
+    secrets: ["PLACES_API_KEY"]
+  })
+  .https.onCall(async (data, context) => {
+    const {query} = data;
+
+    return await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&key=${process.env.PLACES_API_KEY}`);
+});
+
+exports.getPlaceDetails = functions
+  .runWith({
+    secrets: ["PLACES_API_KEY"]
+  })
+  .https.onCall(async (data, context) => {
+    const {placeID} = data;
+
+    return await fetch(`https://maps.googleapis.com/maps/api/place/details/json?fields=geometry&place_id=${placeID}&key=${process.env.PLACES_API_KEY}`);
+});
+
+exports.getAddressFromLatLng = functions
+  .runWith({
+    secrets: ["PLACES_API_KEY"]
+  })
+  .https.onCall(async (data, context) => {
+    const {lat, lng} = data;
+
+    return await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.PLACES_API_KEY}`);
+});
+
 // This function is triggered when the realtime data for a device is updated.
 exports.onRealtimeUpdate = functions.firestore.document('Companies/{companyName}/IoT/realtime_data/devices/{deviceID}').onUpdate(async (change, context) => {
   const newValue = change.after.data();
