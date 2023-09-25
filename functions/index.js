@@ -12,7 +12,8 @@ exports.getAutoCompleteSuggestions = functions
     const {query} = data;
 
     try {
-      return await axios.get(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&key=${process.env.PLACES_API_KEY}`);
+      return await axios.get(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&key=${process.env.PLACES_API_KEY}`)
+        .then((response) => response.data.predictions);
     } catch (e) {
       return e;
     }
@@ -26,7 +27,8 @@ exports.getPlaceDetails = functions
     const {placeID} = data;
 
     try {
-      return await axios.get(`https://maps.googleapis.com/maps/api/place/details/json?fields=geometry&place_id=${placeID}&key=${process.env.PLACES_API_KEY}`);
+      return await axios.get(`https://maps.googleapis.com/maps/api/place/details/json?fields=geometry&place_id=${placeID}&key=${process.env.PLACES_API_KEY}`)
+        .then((response) => response.data.result.geometry.location);
     } catch (e) {
       return e;
     }
@@ -40,7 +42,8 @@ exports.getAddressFromLatLng = functions
     const {lat, lng} = data;
 
     try {
-    return await axios.get(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.PLACES_API_KEY}`);
+    return await axios.get(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.PLACES_API_KEY}`)
+      .then((response) => response.data.results[0].formatted_address);
     } catch (e) {
       return e;
     }
