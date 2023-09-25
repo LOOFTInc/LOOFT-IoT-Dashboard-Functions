@@ -1,6 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 admin.initializeApp();
 
 exports.getAutoCompleteSuggestions = functions
@@ -10,7 +11,11 @@ exports.getAutoCompleteSuggestions = functions
   .https.onCall(async (data, context) => {
     const {query} = data;
 
-    return await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&key=${process.env.PLACES_API_KEY}`);
+    try {
+      return await axios.get(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&key=${process.env.PLACES_API_KEY}`);
+    } catch (e) {
+      return e;
+    }
 });
 
 exports.getPlaceDetails = functions
@@ -20,7 +25,11 @@ exports.getPlaceDetails = functions
   .https.onCall(async (data, context) => {
     const {placeID} = data;
 
-    return await fetch(`https://maps.googleapis.com/maps/api/place/details/json?fields=geometry&place_id=${placeID}&key=${process.env.PLACES_API_KEY}`);
+    try {
+      return await fetch(`https://maps.googleapis.com/maps/api/place/details/json?fields=geometry&place_id=${placeID}&key=${process.env.PLACES_API_KEY}`);
+    } catch (e) {
+      return e;
+    }
 });
 
 exports.getAddressFromLatLng = functions
@@ -30,7 +39,11 @@ exports.getAddressFromLatLng = functions
   .https.onCall(async (data, context) => {
     const {lat, lng} = data;
 
+    try {
     return await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.PLACES_API_KEY}`);
+    } catch (e) {
+      return e;
+    }
 });
 
 // This function is triggered when the realtime data for a device is updated.
