@@ -26,7 +26,7 @@ exports.getPlaceDetails = functions
     const {placeID} = data;
 
     try {
-      return await fetch(`https://maps.googleapis.com/maps/api/place/details/json?fields=geometry&place_id=${placeID}&key=${process.env.PLACES_API_KEY}`);
+      return await axios.get(`https://maps.googleapis.com/maps/api/place/details/json?fields=geometry&place_id=${placeID}&key=${process.env.PLACES_API_KEY}`);
     } catch (e) {
       return e;
     }
@@ -40,7 +40,7 @@ exports.getAddressFromLatLng = functions
     const {lat, lng} = data;
 
     try {
-    return await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.PLACES_API_KEY}`);
+    return await axios.get(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.PLACES_API_KEY}`);
     } catch (e) {
       return e;
     }
