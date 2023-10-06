@@ -21,7 +21,7 @@ exports.getAllUsers = functions.https.onCall(async (data, context) => {
     }
 
     const users = [];
-    await getAuth().listUsers(10000).then((value) => {
+    await getAuth().listUsers().then((value) => {
       value.users.forEach((user) => {
         if (user.customClaims?.company === company) {
           users.push(user);
@@ -34,7 +34,7 @@ exports.getAllUsers = functions.https.onCall(async (data, context) => {
     };
   } catch (e) {
     return {
-      error: e
+      error: e.toString()
     };
   }
 });
