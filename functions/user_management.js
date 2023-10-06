@@ -3,6 +3,17 @@ const admin = require('firebase-admin');
 const {getAuth} = require("firebase-admin/auth");
 admin.initializeApp();
 
+const listAllUsers = async (nextPageToken) => {
+  return await getAuth().listUsers(1000, nextPageToken)
+    .then(async (listUsersResult) => {
+      if (listUsersResult.pageToken) {
+        return [...listUsersResult.users, await listAllUsers(listUsersResult.pageToken)];
+      } else {
+        return listUsersResult.users;
+      }
+    });
+}
+
 exports.getAllUsers = functions.https.onCall(async (data, context) => {
   try {
     const role = context.auth.token.role;
@@ -20,13 +31,17 @@ exports.getAllUsers = functions.https.onCall(async (data, context) => {
       company = context.auth.token.company;
     }
 
-    const users = [];
-    await getAuth().listUsers().then((value) => {
-      value.users.forEach((user) => {
-        if (user.customClaims?.company === company) {
-          users.push(user);
-        }
-      });
+    let users = await listAllUsers();
+    users = users.filter((user) => user.customClaims?.company === company);
+    users = users.map((user) => {
+      return {
+        email: user.email,
+        name: user.displayName,
+        photoURL: user.photoURL,
+        phoneNumber: user.phoneNumber,
+        registrationDate: new Date(user.metadata.creationTime).toJSON(),
+        role: user.customClaims.role,
+      };
     });
 
     return {
