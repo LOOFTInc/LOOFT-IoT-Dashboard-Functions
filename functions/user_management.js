@@ -54,6 +54,101 @@ exports.getAllUsers = functions.https.onCall(async (data, context) => {
   }
 });
 
-exports.test = functions.https.onCall(async (data, context) => {
+exports.createUser = functions.https.onCall(async (data, context) => {
+  try {
+    const role = context.auth.token.role;
 
+    if (role !== 'super_admin' && role !== 'admin') {
+      return {
+        error: 'You are not authorized to perform this action.'
+      };
+    }
+
+    let company;
+    if (role === 'super_admin') {
+      company = data.company;
+    } else {
+      company = context.auth.token.company;
+    }
+
+    const user = await getAuth().createUser({
+      email: data.email,
+      password: data.password,
+      displayName: data.name,
+      photoURL: data.photoURL,
+    });
+
+    await getAuth().setCustomUserClaims(user.uid, {
+      role: data.role,
+      company: company,
+    });
+
+    return {
+      result: user
+    };
+  } catch (e) {
+    return {
+      error: e.toString()
+    };
+  }
+});
+
+exports.updateUser = functions.https.onCall(async (data, context) => {
+  try {
+    const role = context.auth.token.role;
+
+    if (role !== 'super_admin' && role !== 'admin') {
+      return {
+        error: 'You are not authorized to perform this action.'
+      };
+    }
+
+    let company;
+    if (role === 'super_admin') {
+      company = data.company;
+    } else {
+      company = context.auth.token.company;
+    }
+
+    const user = await getAuth().updateUser(data.uid, {
+      email: data.email,
+      displayName: data.name,
+      photoURL: data.photoURL,
+    });
+
+    await getAuth().setCustomUserClaims(user.uid, {
+      role: data.role,
+      company: company,
+    });
+
+    return {
+      result: user
+    };
+  } catch (e) {
+    return {
+      error: e.toString()
+    };
+  }
+});
+
+exports.deleteUser = functions.https.onCall(async (data, context) => {
+  try {
+    const role = context.auth.token.role;
+
+    if (role !== 'super_admin' && role !== 'admin') {
+      return {
+        error: 'You are not authorized to perform this action.'
+      };
+    }
+
+    await getAuth().deleteUser(data.uid);
+
+    return {
+      result: 'User deleted successfully.'
+    };
+  } catch (e) {
+    return {
+      error: e.toString()
+    };
+  }
 });
