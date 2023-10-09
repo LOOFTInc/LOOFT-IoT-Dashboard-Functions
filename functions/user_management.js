@@ -76,6 +76,7 @@ exports.createUser = functions.https.onCall(async (data, context) => {
       password: data.password,
       displayName: data.name,
       photoURL: data.photoURL,
+      phoneNumber: data.phoneNumber,
     });
 
     await getAuth().setCustomUserClaims(user.uid, {
@@ -112,8 +113,10 @@ exports.updateUser = functions.https.onCall(async (data, context) => {
 
     const user = await getAuth().updateUser(data.uid, {
       email: data.email,
+      password: data.password,
       displayName: data.name,
       photoURL: data.photoURL,
+      phoneNumber: data.phoneNumber,
     });
 
     await getAuth().setCustomUserClaims(user.uid, {
