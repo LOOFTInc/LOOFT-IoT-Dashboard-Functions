@@ -35,6 +35,7 @@ exports.getAllUsers = functions.https.onCall(async (data, context) => {
     users = users.filter((user) => user.customClaims?.company === company);
     users = users.map((user) => {
       return {
+        uid: user.uid,
         email: user.email,
         name: user.displayName,
         photoURL: user.photoURL,
@@ -85,7 +86,15 @@ exports.createUser = functions.https.onCall(async (data, context) => {
     });
 
     return {
-      result: user
+      result: {
+        uid: user.uid,
+        email: user.email,
+        name: user.displayName,
+        photoURL: user.photoURL,
+        phoneNumber: user.phoneNumber,
+        registrationDate: new Date(user.metadata.creationTime).toJSON(),
+        role: user.customClaims.role,
+      }
     };
   } catch (e) {
     return {
@@ -125,7 +134,15 @@ exports.updateUser = functions.https.onCall(async (data, context) => {
     });
 
     return {
-      result: user
+      result: {
+        uid: user.uid,
+        email: user.email,
+        name: user.displayName,
+        photoURL: user.photoURL,
+        phoneNumber: user.phoneNumber,
+        registrationDate: new Date(user.metadata.creationTime).toJSON(),
+        role: user.customClaims.role,
+      }
     };
   } catch (e) {
     return {
