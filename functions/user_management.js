@@ -35,7 +35,7 @@ const getUserDataFromData = (data) => {
   return userData;
 }
 
-const getUserDataFromUser = (user) => {
+const getUserDataFromUser = (user, claims) => {
   return {
     uid: user.uid,
     email: user.email,
@@ -43,7 +43,7 @@ const getUserDataFromUser = (user) => {
     photoURL: user.photoURL,
     phoneNumber: user.phoneNumber,
     registrationDate: new Date(user.metadata.creationTime).toJSON(),
-    role: user.customClaims.role,
+    role: user.customClaims?.role ?? claims?.role,
   };
 }
 
@@ -98,16 +98,15 @@ exports.createUser = functions.https.onCall(async (data, context) => {
     }
 
     const userData = getUserDataFromData(data);
-
     const user = await getAuth().createUser(userData);
-
-    await getAuth().setCustomUserClaims(user.uid, {
+    const claims = {
       role: data.role,
       company: company,
-    });
+    };
+    await getAuth().setCustomUserClaims(user.uid, claims);
 
     return {
-      result: getUserDataFromUser(user)
+      result: getUserDataFromUser(user, claims)
     };
   } catch (e) {
     return {
@@ -135,13 +134,14 @@ exports.updateUser = functions.https.onCall(async (data, context) => {
 
     const userData = getUserDataFromData(data);
     const user = await getAuth().updateUser(data.uid, userData);
-    await getAuth().setCustomUserClaims(user.uid, {
+    const claims = {
       role: data.role,
       company: company,
-    });
+    };
+    await getAuth().setCustomUserClaims(user.uid, claims);
 
     return {
-      result: getUserDataFromUser(user)
+      result: getUserDataFromUser(user, claims)
     };
   } catch (e) {
     return {
