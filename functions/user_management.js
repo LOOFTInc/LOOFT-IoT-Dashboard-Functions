@@ -133,6 +133,9 @@ exports.updateUser = functions.https.onCall(async (data, context) => {
     }
 
     const userData = getUserDataFromData(data);
+    if (!data.phoneNumber) {
+      userData.phoneNumber = null;
+    }
     const user = await getAuth().updateUser(data.uid, userData);
     const claims = {
       role: data.role,
