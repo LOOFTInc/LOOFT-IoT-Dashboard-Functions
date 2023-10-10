@@ -14,6 +14,39 @@ const listAllUsers = async (nextPageToken) => {
     });
 }
 
+const getUserDataFromData = (data) => {
+  const userData = {};
+  if (data.email) {
+    userData.email = data.email;
+  }
+  if (data.password) {
+    userData.password = data.password;
+  }
+  if (data.name) {
+    userData.displayName = data.name;
+  }
+  if (data.photoURL) {
+    userData.photoURL = data.photoURL;
+  }
+  if (data.phoneNumber) {
+    userData.phoneNumber = data.phoneNumber;
+  }
+
+  return userData;
+}
+
+const getUserDataFromUser = (user) => {
+  return {
+    uid: user.uid,
+    email: user.email,
+    name: user.displayName,
+    photoURL: user.photoURL,
+    phoneNumber: user.phoneNumber,
+    registrationDate: new Date(user.metadata.creationTime).toJSON(),
+    role: user.customClaims.role,
+  };
+}
+
 exports.getAllUsers = functions.https.onCall(async (data, context) => {
   try {
     const role = context.auth.token.role;
@@ -34,15 +67,7 @@ exports.getAllUsers = functions.https.onCall(async (data, context) => {
     let users = await listAllUsers();
     users = users.filter((user) => user.customClaims?.company === company);
     users = users.map((user) => {
-      return {
-        uid: user.uid,
-        email: user.email,
-        name: user.displayName,
-        photoURL: user.photoURL,
-        phoneNumber: user.phoneNumber,
-        registrationDate: new Date(user.metadata.creationTime).toJSON(),
-        role: user.customClaims.role,
-      };
+      return getUserDataFromUser(user);
     });
 
     return {
@@ -72,13 +97,9 @@ exports.createUser = functions.https.onCall(async (data, context) => {
       company = context.auth.token.company;
     }
 
-    const user = await getAuth().createUser({
-      email: data.email,
-      password: data.password,
-      displayName: data.name,
-      photoURL: data.photoURL,
-      phoneNumber: data.phoneNumber,
-    });
+    const userData = getUserDataFromData(data);
+
+    const user = await getAuth().createUser(userData);
 
     await getAuth().setCustomUserClaims(user.uid, {
       role: data.role,
@@ -86,15 +107,7 @@ exports.createUser = functions.https.onCall(async (data, context) => {
     });
 
     return {
-      result: {
-        uid: user.uid,
-        email: user.email,
-        name: user.displayName,
-        photoURL: user.photoURL,
-        phoneNumber: user.phoneNumber,
-        registrationDate: new Date(user.metadata.creationTime).toJSON(),
-        role: user.customClaims.role,
-      }
+      result: getUserDataFromUser(user)
     };
   } catch (e) {
     return {
@@ -120,29 +133,15 @@ exports.updateUser = functions.https.onCall(async (data, context) => {
       company = context.auth.token.company;
     }
 
-    const user = await getAuth().updateUser(data.uid, {
-      email: data.email,
-      password: data.password,
-      displayName: data.name,
-      photoURL: data.photoURL,
-      phoneNumber: data.phoneNumber,
-    });
-
+    const userData = getUserDataFromData(data);
+    const user = await getAuth().updateUser(data.uid, userData);
     await getAuth().setCustomUserClaims(user.uid, {
       role: data.role,
       company: company,
     });
 
     return {
-      result: {
-        uid: user.uid,
-        email: user.email,
-        name: user.displayName,
-        photoURL: user.photoURL,
-        phoneNumber: user.phoneNumber,
-        registrationDate: new Date(user.metadata.creationTime).toJSON(),
-        role: user.customClaims.role,
-      }
+      result: getUserDataFromUser(user)
     };
   } catch (e) {
     return {
