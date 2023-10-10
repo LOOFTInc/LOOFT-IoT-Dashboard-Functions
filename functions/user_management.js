@@ -43,7 +43,7 @@ const getUserDataFromUser = (user, claims) => {
     photoURL: user.photoURL,
     phoneNumber: user.phoneNumber,
     registrationDate: new Date(user.metadata.creationTime).toJSON(),
-    role: user.customClaims?.role ?? claims?.role,
+    role: claims?.role,
   };
 }
 
